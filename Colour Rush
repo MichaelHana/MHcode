@@ -1,0 +1,435 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+import javax.swing.*;
+import javax.swing.JTextField;
+import java.util.*;
+import java.awt.Dimension;
+import java.io.*;
+
+
+public class GameTest  {
+	
+	//initializing variables
+	static JPanel rectangle = new JPanel();
+	static private Point newPoint = new Point();
+	
+	
+	static JTextField input = new JTextField();
+	static JLabel scoreLabel = new JLabel("Score: ");
+	static ImageIcon backgroundIcon = new ImageIcon("C:/Java Eclipse Workspace/GameTest/ColorBreakOutBackground.jpeg");
+	
+	static JFrame frame = new JFrame("Color BreakOut");
+	static JPanel deathPanel = new JPanel();
+	
+	static boolean dead = false;
+	static boolean canMove = true;
+	
+	static JPanel border = new JPanel();
+	
+	static JLabel deathLabel = new JLabel("You Died");
+	static JButton deathButton = new JButton("Restart");
+	
+	static JPanel panel = new JPanel();
+	static JPanel wall = new JPanel();
+	static JPanel wall2 = new JPanel();
+	static JPanel wall3 = new JPanel();
+	
+	static int score = 0;
+	static int speed = 1;
+	static int highscore = 0;
+	
+	public static void main(String[] args) throws IOException{
+		// TODO Auto-generated method stub
+		
+		Scanner scan = new Scanner(new File("C:/Java Eclipse Workspace/GameTest/highscore.txt"));
+		String highscoreString = scan.next();
+		System.out.println(highscoreString);
+		highscore = Integer.valueOf(highscoreString);	
+
+		
+		//Adjusting JFrame elements
+		panel.setPreferredSize(new Dimension(100, 200));
+		panel.setLayout(null);
+		
+		JLabel labelGreen = new JLabel("J");
+		JLabel labelBlue = new JLabel("K");
+		JLabel labelRed = new JLabel("L");
+		JLabel labelYellow = new JLabel(";");
+		
+		labelGreen.setBounds(100, 525, 75, 75);
+		labelGreen.setBackground(Color.green);
+		labelGreen.setOpaque(true);
+		labelGreen.setHorizontalAlignment(JLabel.CENTER);
+		
+		labelBlue.setBounds(200, 525, 75, 75);
+		labelBlue.setBackground(Color.blue);
+		labelBlue.setOpaque(true);
+		labelBlue.setHorizontalAlignment(JLabel.CENTER);
+	
+		
+		labelRed.setBounds(300, 525, 75, 75);
+		labelRed.setBackground(Color.red);
+		labelRed.setOpaque(true);
+		labelRed.setHorizontalAlignment(JLabel.CENTER);
+		
+		labelYellow.setBounds(400, 525, 75, 75);
+		labelYellow.setBackground(Color.yellow);
+		labelYellow.setOpaque(true);
+		labelYellow.setHorizontalAlignment(JLabel.CENTER);
+		
+		
+		rectangle.setBounds(0, 200, 100, 50);
+		rectangle.setBackground(Color.green);
+		
+		border.setBounds(0, 400, 1000, 10);
+		border.setBackground(Color.gray);
+		
+		input.setBounds(-100, -100, 100, 100);
+		
+		scoreLabel.setBounds(800, 525, 200, 20);
+		
+
+		Image image = backgroundIcon.getImage();
+		Image newImage = image.getScaledInstance(1000, 400, java.awt.Image.SCALE_SMOOTH);
+		backgroundIcon = new ImageIcon(newImage);
+		JLabel backgroundLabel = new JLabel(backgroundIcon);
+		backgroundLabel.setBounds(0, 0, 1000, 400);
+		
+		
+		
+		deathPanel.setPreferredSize(new Dimension(1000, 750));
+		deathPanel.setLayout(null);
+		deathPanel.setBackground(Color.red);
+		
+		deathLabel.setFont(new Font("Serif", Font.PLAIN, 100));
+		deathLabel.setBounds(0, 0, 1000 , 500);
+		deathLabel.setHorizontalAlignment(JLabel.CENTER);
+		deathLabel.setVerticalAlignment(JLabel.CENTER);
+	
+		deathButton.setBounds(0, 500, 1000, 250);
+		
+		//adding elements to main panel
+		
+		panel.add(labelGreen);
+		panel.add(labelBlue);
+		panel.add(labelRed);
+		panel.add(labelYellow);
+		
+		panel.add(border);
+		panel.add(rectangle);
+		panel.add(wall);
+		panel.add(wall2);
+		panel.add(wall3);
+		panel.add(input);
+		panel.add(scoreLabel);
+		panel.add(backgroundLabel);
+		
+		deathPanel.add(deathLabel);
+		deathPanel.add(deathButton);
+	
+
+		//adjusting JFrame
+
+		frame.add(panel);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocation(250, 50);
+		frame.setSize(1000, 750);
+		frame.setVisible(true);
+		
+		deathButton.addActionListener(new ClickRestart());
+		
+		input.addKeyListener(keyListener);
+
+		
+		while (true){
+			
+			if (dead == false){
+				wallMove();
+				System.out.println(dead);
+			}
+
+		}
+	}
+	
+	static KeyListener keyListener = new KeyListener(){
+	
+		public void keyTyped(KeyEvent event){
+			
+			char character = event.getKeyChar();
+			Point point = rectangle.getLocation();
+			
+			switch(character){
+				case 'w':
+	
+					newPoint.setLocation(point.getX(), point.getY() - 50);
+					
+					moveTest();
+					if (canMove == true){
+					rectangle.setLocation(newPoint);	
+					}
+					break;
+					
+				case 's':
+					
+					newPoint.setLocation(point.getX(), point.getY() + 50);
+					
+					moveTest();
+					if (canMove == true){
+						rectangle.setLocation(newPoint);
+					}
+					break;
+					
+				case 'd':
+					
+					newPoint.setLocation(point.getX() + 50, point.getY());
+					
+					moveTest();
+					if (canMove == true){
+					rectangle.setLocation(newPoint);
+					}
+					
+					break;
+					
+				case 'a':
+					
+					newPoint.setLocation(point.getX() - 50, point.getY());
+					
+					moveTest();
+					if (canMove == true){
+					rectangle.setLocation(newPoint);
+					}
+					
+					break;
+					
+				case 'j':
+					
+					rectangle.setBackground(Color.green);
+					
+					break;
+				
+				case 'k':
+					
+					rectangle.setBackground(Color.blue);
+					
+					break;
+				
+				case 'l':
+				
+					rectangle.setBackground(Color.red);
+					
+					break;
+				
+					
+				case ';':
+					
+					rectangle.setBackground(Color.yellow);
+					
+					break;
+			}
+		}
+		
+	
+		public void keyReleased(KeyEvent event){
+
+		}
+		
+	
+		public void keyPressed(KeyEvent event){
+
+		}
+	};
+
+	static class ClickRestart implements ActionListener{
+		
+		public void actionPerformed (ActionEvent e){
+			deathPanel.setVisible(false);
+			panel.setVisible(true);
+			
+			score = 0;
+			speed = 1;
+			rectangle.setBackground(Color.green);
+			rectangle.setLocation(0, 200);
+			dead = false;
+			modifyWall();
+			
+			input.requestFocusInWindow();
+		}
+		
+		
+	}
+	
+	static void wallMove(){
+		
+		//Tick system for wall
+		modifyWall();
+		while(dead == false){
+			
+			int num = 1;
+			int highNum = 1000000;
+			
+			String stringScore = Integer.toString(score);
+			scoreLabel.setText("Score: " + stringScore);
+			
+			if (wall.getX() + wall.getBounds().width <= 0 && wall2.getX() + wall2.getBounds().width <= 0){
+				modifyWall();
+				if (speed <= 6){
+					speed = speed + 1;
+				}
+				score++;
+
+			}
+			
+			for(double i = 0; i < highNum; i = i + 1){
+				num++;
+	
+				//death system
+				checkDeath();
+			}
+			
+			//moving the wall
+			if (num  >= highNum){
+
+			
+				Point wallPoint = new Point();
+				
+				wallPoint = wall.getLocation();
+				wallPoint.x = wallPoint.x - speed;
+				wall.setLocation(wallPoint);
+				
+				
+				Point wallPoint2 = new Point();
+				
+				wallPoint2.setLocation(wall2.getLocation());
+				wallPoint2.x = wallPoint2.x - speed;
+				wall2.setLocation(wallPoint2);
+				
+				Point wallPoint3 = new Point();
+				
+				wallPoint3.setLocation(wall3.getLocation());
+				wallPoint3.x = wallPoint3.x - speed;
+				wall3.setLocation(wallPoint3);
+				
+				
+			}
+			//Death System
+			checkDeath();
+			
+
+			
+		}
+	}
+	
+	static public void death(){
+	
+		panel.setVisible(false);
+		frame.add(deathPanel);
+		deathLabel.setText(scoreLabel.getText());
+		deathPanel.setVisible(true);
+		
+		rectangle.setLocation(0, 200);
+		wall.setLocation(1500, 1500);
+		wall2.setLocation(1500, 1500);
+		wall3.setLocation(1500, 1500);
+		
+
+		
+	}
+
+	static public void moveTest(){
+		if (newPoint.getX() > 900 || newPoint.getX() < 0 || newPoint.getY() < 0 || newPoint.getY() > 350){
+			canMove = false;
+		}
+		else{
+			canMove = true;
+		}
+	}
+	
+	static public void modifyWall(){
+		
+		
+		Random randNum = new Random();
+		int num = randNum.nextInt(3);
+		
+		switch(num){
+			case 0:
+				wall.setBounds(800, 250, 75, 150); 
+				wall2.setBounds(800, 0, 75, 100);
+				wall.setBackground(colorSelect());
+				wall2.setBackground(colorSelect());
+				break;
+			case 1:
+				wall.setBounds(800, 0, 200, 100);
+				wall2.setBounds(800, 100, 300, 300);
+				wall.setBackground(colorSelect());
+				wall2.setBackground(colorSelect());
+				break;
+			case 2:
+				wall.setBounds(800, 0, 400, 200);
+				wall2.setBounds(800, 200, 400, 200);
+				wall.setBackground(colorSelect());
+				wall2.setBackground(colorSelect());
+			case 3:
+				wall.setBounds(800, 300, 75, 100);
+				wall2.setBounds(800, 0, 75, 100);
+				wall3.setBounds(800, 100, 75, 200);
+				wall.setBackground(colorSelect());
+				wall2.setBackground(colorSelect());
+				wall3.setBackground(Color.white);
+				
+
+		}
+	
+	}
+
+	static public Color colorSelect(){
+	
+		Color colorChosen = null;
+		Random randColor = new Random();
+		int numColor = randColor.nextInt(4);
+		
+		switch(numColor){
+			case 0:
+				colorChosen = Color.blue;
+				break;
+			case 1:
+				colorChosen = Color.green;
+				break;
+			case 2:
+				colorChosen = Color.red;
+				break;
+			case 3:
+				colorChosen = Color.yellow;
+			
+		}
+		return colorChosen;
+	}
+	
+	static public void checkDeath(){
+	
+		Rectangle wallRectangle = wall.getBounds();
+		Rectangle wall2Rectangle = wall2.getBounds();
+		Rectangle wall3Rectangle = wall3.getBounds();
+
+		if (rectangle.getBackground() != wall.getBackground()){//if colors are same
+			if(rectangle.getBounds().intersects(wallRectangle)){
+				death();
+			}
+		}
+		if (rectangle.getBackground() != wall2.getBackground()){
+			if (rectangle.getBounds().intersects(wall2Rectangle)){
+				death();
+			}
+		}
+		if (rectangle.getBackground() != wall3.getBackground()){
+			if (rectangle.getBounds().intersects(wall3Rectangle)){
+				death();
+			}
+		}
+	}	
+
+}
+
+
