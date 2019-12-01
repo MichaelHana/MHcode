@@ -1,0 +1,129 @@
+import java.awt.*;
+import javax.swing.*;
+import java.util.*;
+import java.awt.event.*;
+
+public class SortingVisualiser {
+
+	static JFrame frame = new JFrame();
+	static ArrayList<JLabel> Label = new ArrayList<JLabel>();
+	static ArrayList<JLabel> Label2 = new ArrayList<JLabel>();
+	static JPanel panel = new JPanel();
+	static int panelwidth = 10;
+	static int panelheight = 50;
+	static JButton start = new JButton("Start");
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		start.addActionListener(new ClickStart());
+		start.setBounds(0, 0, 200, 100);
+		panel.setLayout(null);
+		panel.setPreferredSize(new Dimension(1500, 750));
+		panel.add(start);
+		
+		//assigning heights to the panels
+		for (int x = 0; x <= 75; x++){
+			Label.add(new JLabel());
+			Label.get(x).setBounds(2*x*panelwidth, 750 - panelheight, panelwidth, panelheight);
+			Label.get(x).setBackground(Color.black);
+			Label.get(x).setOpaque(true);
+			
+			panelheight = panelheight+6;
+			//panel.add(Label.get(x));
+		}
+
+		
+		Randomizer();
+		Printer();
+		
+		//Creating the frame
+		frame.add(panel);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocation(250, 50);
+		frame.setSize(1500, 750);
+		frame.setVisible(true);
+		
+		
+	}
+	
+	//Randomizes the order of the bars
+	public static void Randomizer(){
+		
+		Random rand = new Random();
+			
+		while (Label.size() >= 1){
+			
+			int num = rand.nextInt(Label.size());
+			Label2.add(Label.get(num));
+			Label2.get(Label2.size()-1).setBounds(2*(Label2.size()-1)*panelwidth, 750 - Label.get(num).getHeight(), panelwidth, Label.get(num).getHeight());
+			Label.remove(num);
+
+		}
+		
+		
+	}
+	
+	//Prints bars onto the screen
+	public static void Printer(){
+		
+		Label.clear();
+		
+		for (int x = 0; x < Label2.size(); x++){
+			Label.add(Label2.get(x));
+			panel.add(Label.get(x));
+		}
+		
+	}
+	
+	//The actual sorter
+	public static void Sorter(){
+
+		int counter = 0;
+		Label2.clear();
+		
+		while (Label.size() >= 1){	
+			//determining the index of the highest bar
+			int testmin = 0;
+			int min = panelheight;
+			int index = 0;
+			
+			
+			for (int x = 0; x < Label.size(); x++){
+				testmin = Label.get(x).getHeight();
+				if (testmin < min){
+					min = testmin;
+					index = x;
+				}
+			}
+		
+			Label2.add(Label.get(index));
+			Label2.get(counter).setBounds(2*counter*panelwidth, Label.get(index).getY(), panelwidth, min);
+			Label.get(index).setLocation(2*counter*panelwidth, Label.get(index).getY());
+			Label.remove(index);
+			counter++;
+			
+			
+		}
+	
+		
+
+			
+	}
+
+	//clicking the start button
+	static class ClickStart implements ActionListener{
+		
+		public void actionPerformed (ActionEvent e){
+			Sorter();
+		}
+	}
+}
+
+
+
+
+
+
+
+
