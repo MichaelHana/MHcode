@@ -1,0 +1,339 @@
+import javax.swing.*;
+import java.awt.event.KeyListener;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.util.*;
+import java.lang.Math;
+
+
+public class Game {
+
+	//creating game variables and elements
+	static JFrame frame = new JFrame();//main frame
+	static JPanel panel = new JPanel();//main panel
+	static JTextField input = new JTextField();// input for direction
+	static JButton restart = new JButton("Play Again");// restart button
+	static JLabel deathScreen = new JLabel("score: ");// score label
+	static JLabel fruit = new JLabel();// fruit
+	
+	static ArrayList<JLabel> snake = new ArrayList();// the snake itself
+	static ArrayList<Point> pointTurn = new ArrayList();// list of points where snake turned
+	
+	static boolean alive = true;//snake status
+	static int score;
+	static char snakeDirection = 'r';//snake starts on left side of screen so default is right
+	
+	static int width = 1000;
+	static int height = 750;
+	static int unit = 25;//base number of the grid system
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		//moving textField out of screen
+		input.setBounds(-100, -100, 1, 1);
+		
+		//modifying restart button
+		restart.setBounds(-400, 500, 300, 200);//is outside of screen
+		restart.setBackground(Color.red);
+		restart.setFont(new Font("Arial", 50, 24));
+		
+		//modifying fruit
+		fruit.setBounds(500, 325, unit, unit);
+		fruit.setOpaque(true);
+		fruit.setBackground(Color.red);
+		
+		//modifying deathScreen
+		deathScreen.setBounds(-1000, 200, 900, 700);//is outside of screen
+		deathScreen.setForeground(Color.white);
+		deathScreen.setFont(new Font("Arial", 36, 34));
+
+		//modifying panel
+		panel.setPreferredSize(new Dimension(width, height));
+		panel.setLayout(null);
+		panel.setBackground(Color.black);
+		panel.add(input);
+		panel.add(restart);
+		panel.add(deathScreen);
+		panel.add(fruit);
+		
+		//taking care of elementary requirements before game starts
+		createSnake();
+		fruitSpawn();
+		fruit.setLocation(width/2, height/2);//setting fruit in middle of the screen
+		input.addKeyListener(keylistener);
+		restart.addActionListener(new restartClick());
+		
+		//creating the frame
+		frame.add(panel);
+		frame.setVisible(true);
+		frame.setSize(width, height);
+		frame.setLocation(250, 100);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		//main game loop
+		while(true){
+			
+			moveSnake();
+			
+			//ticker
+			int t = 300000000;//manipulates the snake speed
+			for (int x = 0; x < t; x++){
+				if (t == 0){
+					break;
+				}
+				t--;
+			}
+			
+			if (alive == false){
+				death();
+			}
+			
+		}
+
+	}
+	
+	static KeyListener keylistener = new KeyListener(){
+		
+	
+		public void keyTyped(KeyEvent event){
+			
+		}
+		
+		public void keyPressed(KeyEvent event){
+			
+			int character = event.getKeyCode();
+			
+			//right input
+			if (character == event.VK_D || character == event.VK_RIGHT){
+				if (snakeDirection != 'l'){
+					snakeDirection = 'r';
+					pointTurn.add(new Point(snake.get(0).getX(), snake.get(0).getY()));
+				}
+			}
+			//left input
+			if (character == event.VK_A || character == event.VK_LEFT){
+				if (snakeDirection != 'r'){
+					snakeDirection = 'l';
+					pointTurn.add(new Point(snake.get(0).getX(), snake.get(0).getY()));
+				}
+			}
+			//up input
+			if (character == event.VK_W || character == event.VK_UP){
+				if (snakeDirection != 'd'){
+					snakeDirection = 'u';
+					pointTurn.add(new Point(snake.get(0).getX(), snake.get(0).getY()));
+				}
+			}
+			//down input
+			if (character == event.VK_S || character == event.VK_DOWN){
+				if (snakeDirection != 'u'){
+					snakeDirection = 'd';
+					pointTurn.add(new Point(snake.get(0).getX(), snake.get(0).getY()));
+				}
+			}
+			
+		/* All "pointTurn.add" lines of code at the end of each if statement adds a point to pointTurn
+		 * This point is crucial to tell the other body parts when to turn
+		 * */
+			
+		}
+		
+		public void keyReleased(KeyEvent event){
+			
+		}
+		
+	};
+	
+	static class restartClick implements ActionListener{
+		
+		public void actionPerformed(ActionEvent e){
+			alive = true;
+			createSnake();//recreate the snake
+			restart.setLocation(-400, 500);//moving button outside of screen
+			deathScreen.setLocation(-1000, 200);//moving label outside the screen
+			snakeDirection = 'r';
+			fruit.setLocation(width/2, height/2);//bringing fruit to center of screen
+			input.grabFocus();//grabs cursor and puts it into textField
+			score = 0;//reset score
+		}
+	}
+	
+	public static void createSnake(){
+
+		//creates the snake's body parts
+		for (int x = 0; x < 4; x++){ // x < 4 makes the snake start with 4 body parts
+			snake.add(new JLabel());// adding a new body part
+			snake.get(x).setBackground(Color.green);//making new body part green
+			snake.get(x).setBounds((4-x)*unit, height/2, unit, unit);//dimensions and location of each body part. Location is behind the body part in front by unit
+			snake.get(x).setOpaque(true);
+			panel.add(snake.get(x));//adding snake body part to the main panel
+			restart.setLocation(-400, 500);//moving away the restart button after the creation of the snake is complete
+			
+		}
+		
+	}
+	
+	public static void moveSnake(){//moves sthe snake body
+		
+		ArrayList<Integer> shortestDistances = new ArrayList();
+		boolean validity;
+		int pointTrack = 0;
+		
+		//iterator for every snake part
+		for (int x = 0; x < snake.size(); x++){
+			
+
+			if (x != 0){//if body part is not the head
+				//move right
+				if (snake.get(x-1).getX()-snake.get(x).getX() == 2*unit && snake.get(x-1).getY() == snake.get(x).getY()){
+					snake.get(x).setLocation(snake.get(x).getX() + unit, snake.get(x).getY());
+				}
+				//move left
+				if (snake.get(x-1).getX()-snake.get(x).getX() == -2*unit && snake.get(x-1).getY() == snake.get(x).getY()){
+					snake.get(x).setLocation(snake.get(x).getX() - unit, snake.get(x).getY());
+				}
+				//move down
+				if (snake.get(x-1).getX() == snake.get(x).getX() && snake.get(x-1).getY()-snake.get(x).getY() == 2*unit){
+					snake.get(x).setLocation(snake.get(x).getX(), snake.get(x).getY() + unit);
+				}
+				//move up
+				if (snake.get(x-1).getX() == snake.get(x).getX() && snake.get(x-1).getY()-snake.get(x).getY() == -2*unit){
+					snake.get(x).setLocation(snake.get(x).getX(), snake.get(x).getY() - unit);
+				}
+				//determines where to move if the snake body part ahead of it is diagonal from it's current position
+				if (Math.abs(snake.get(x-1).getX() - snake.get(x).getX()) == unit && Math.abs(snake.get(x-1).getY() - snake.get(x).getY()) == unit) {
+					for (int y = 0; y < pointTurn.size();y++){
+						//checking for horizontally adjacent points in pointTurn
+						if (Math.abs(pointTurn.get(y).getX() - snake.get(x).getX()) == unit && snake.get(x).getY() - pointTurn.get(y).getY() == 0){
+							shortestDistances.add(y);//adding the index in pointTurn of the point that was adjacent to current snake body part
+						}
+						//checking for vertically adjacent point in pointTurn
+						if (pointTurn.get(y).getX() - snake.get(x).getX() == 0 && Math.abs(pointTurn.get(y).getY() - snake.get(x).getY()) == unit){
+							shortestDistances.add(y);//adding the index in pointTurn of the point that was adjacent to current snake body part
+						}
+					}
+					//iterates through every index stored from pointTurn
+					for (int z = 0; z < shortestDistances.size(); z++){
+						validity = true;
+						for (int n = 0; n < snake.size(); n++){
+							//checks if there is a snake body part at any points, if there is then break out of loop because validity has already been determined
+							if (snake.get(n).getX() == pointTurn.get(shortestDistances.get(z)).getX() && snake.get(n).getY() == pointTurn.get(shortestDistances.get(z)).getY()){
+								validity = false;
+								break;//no need to check the other body parts
+							}
+						}
+						
+						if (validity == true){
+							snake.get(x).setLocation(pointTurn.get(shortestDistances.get(z)));//setting location of snake to the valid point
+							shortestDistances.clear();//clearing the indices stored
+						}
+					}
+				}
+			
+				
+				//deletes the point from the pointTurn ArrayList after the tail has passed it
+				if (x == snake.size() - 1 && pointTurn.size() > 0){//if body part is tail
+					if (snake.get(x).getX() == pointTurn.get(pointTrack).getX() && snake.get(x).getY() == pointTurn.get(pointTrack).getY()){
+						pointTurn.remove(pointTrack);//checks if the last snake body part has passed the point and removes the point from the list if true
+						pointTrack++;//incrementing pointTrack by one
+					}
+				}
+			}
+			
+				
+			else{//if body part is head
+
+				// moves the head of the snake
+				switch (snakeDirection){
+				case 'r'://right
+					snake.get(x).setLocation(snake.get(x).getX() + unit, snake.get(x).getY());
+					break;
+				case 'l'://left
+					snake.get(x).setLocation(snake.get(x).getX() - unit, snake.get(x).getY());
+					break;
+				case 'u'://up
+					snake.get(x).setLocation(snake.get(x).getX(), snake.get(x).getY() - unit);
+					break;
+				case 'd'://down
+					snake.get(x).setLocation(snake.get(x).getX(), snake.get(x).getY() + unit);
+					break;
+					
+				}
+				
+				//checks if snake has ran into itself and kills if true
+				for (int y = 1; y < snake.size(); y++){
+					if (snake.get(x).getX() == snake.get(y).getX() && snake.get(x).getY() == snake.get(y).getY()){
+						alive = false;
+					}
+				}
+				
+				//checks if snake has eaten a fruit and adds another body part if true
+				if (snake.get(x).getX() == fruit.getX() && fruit.getY() == snake.get(x).getY()){
+					fruitSpawn();
+					score++;//increment score
+					snake.add(new JLabel());//create new body part which will become tail
+					snake.get(snake.size() - 1).setBackground(Color.green);//making color green
+					snake.get(snake.size() - 1).setOpaque(true);//making body part opaque
+					panel.add(snake.get(snake.size() - 1));//adding body part to panel
+					snake.get(snake.size() -1).setBounds(snake.get(snake.size() -2).getX(), snake.get(snake.size() - 2).getY(), unit, unit);//sets position of new body part to tail's position
+				}
+			}
+			
+			//Checks and kills if snake has passed any wall
+			if (snake.get(x).getX() > width - unit){//snake passes right wall
+				alive = false;
+			}
+			if (snake.get(x).getX() < 0){//snake passes left wall
+				alive = false;
+			}
+			if (snake.get(x).getY() > height - 50){//snake passes bottom wall
+				alive = false;
+			}
+			if (snake.get(x).getY() < 0){//snake passes top wall
+				alive = false;
+			}
+		}
+	}
+	
+	public static void death(){
+		
+		pointTurn.clear();//clearing all points from pointTurn
+		//setting the location of each body part to outside the screen
+		for (int x = 0; x < snake.size(); x++){
+			snake.get(x).setLocation(unit*x*-1, -1000);
+		}
+		snake.clear();//clearing snake
+		restart.setLocation(325, 500);//bringing button to screen
+		deathScreen.setLocation(400, 0);//bringing label to screen
+		deathScreen.setText("Score: " + score);
+		fruit.setLocation(- 2000, -2000);// moving fruit to outside the screen
+
+	}
+	
+	public static void fruitSpawn(){
+		Random rand = new Random();//random
+		int randx = rand.nextInt(width - unit);//generating random value for x
+		int fruitx = randx - (randx % unit);//making sure that x is a multiple of unit
+		int randy = rand.nextInt(height - unit);//generating a random value for y
+		int fruity = randy - (randy % unit);//making sure that y is a multiple of unit
+		
+		for (int x = 0; x < snake.size(); x++){
+			if (snake.get(x).getX() == fruitx || snake.get(x).getY() == fruity){
+				rand = new Random();//random
+				randx = rand.nextInt(width - unit);//generating random value for x
+				fruitx = randx - (randx % unit);//making sure that x is a multiple of unit
+				randy = rand.nextInt(height - unit);//generating a random value for y
+				fruity = randy - (randy % unit);//making sure that y is a multiple of unit
+			}
+		}
+		
+		fruit.setLocation(fruitx, fruity);//setting the location of the fruit to fruitx and fruity	
+	}
+	
+}
